@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <title>{{ app_name }}</title>
+  <link rel="stylesheet" href="/static/main.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>{{ app_name }}</h1>
+
+    <textarea id="text" rows="4" placeholder="Nhập câu có viết tắt/emoji..."></textarea>
+    <div class="actions">
+      <label><input type="checkbox" id="probs" checked /> Trả xác suất</label>
+      <button id="btn">Phân tích</button>
+    </div>
+
+    <pre id="out"></pre>
+
+    <hr/>
+    <h3>Ví dụ nhanh</h3>
+    <ul id="examples">
+      <li>mk ko thik môn này ^^</li>
+      <li>trc giờ dc hỗ trợ rất nhiều &lt;3</li>
+      <li>bài giảng hay qa nhưng lớp đông quá :(</li>
+    </ul>
+  </div>
+  <!-- thêm ?v=2 để chắc chắn trình duyệt nạp JS mới -->
+  <script src="/static/main.js?v=2"></script>
+</body>
+</html>
