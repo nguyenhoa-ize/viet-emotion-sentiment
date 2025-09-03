@@ -1,33 +1,22 @@
-# app/services/predictor.py
-import os
-from typing import List, Tuple, Optional, Dict
+from typing import Dict, List, Optional, Tuple
 import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
 from app.core.config import settings
-from app.utils.text import expand_text
+from app.utils.text import normalize_text
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-if hasattr(torch, "set_float32_matmul_precision"):
-    torch.set_float32_matmul_precision("medium")
 
-def load_labels(path: str) -> List[str]:
-    p = os.path.join(path, "labels.txt")
-    if os.path.exists(p):
-        with open(p, "r", encoding="utf-8") as f:
-            return [ln.strip() for ln in f if ln.strip()]
-    return ["Negative", "Neutral", "Positive"]
-
-class Predictor:
+class TransformersModel:
     def __init__(self):
-        self.model_dir = settings.model_dir
-        self.max_len = int(settings.max_len)
-        self.use_half = bool(settings.use_half) and DEVICE == "cuda"
-
-        self.labels = load_labels(self.model_dir)
+        self.model_dir = "models/transformers"
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_dir, use_fast=True)
+        self.max_len = 160
+        self.use_half = bool(settings.use_half) and DEVICE == "cuda"
         self.model = AutoModelForSequenceClassification.from_pretrained(self.model_dir)
         self.model.to(DEVICE).eval()
-
+        self.labels = self.model.config.id2label
+        
     def _enc(self, texts: List[str]) -> dict:
         return self.tokenizer(
             texts,
@@ -37,19 +26,20 @@ class Predictor:
             return_tensors="pt",
         )
 
-    def predict_batch(
+    def predict(
         self, texts: List[str], return_probs: bool = True
     ) -> Tuple[List[str], List[str], Optional[List[Dict[str, float]]]]:
         if not texts:
-            return [], [], [] if return_probs else None
+            return [], [], [] if return_probs else ([], [], None)
 
-        expanded = [expand_text(t) for t in texts]
-        batch = self._enc(expanded)
+        tokens = [normalize_text(t) for t in texts]
+        exps = [normalize_text(t, use_vitok=False, join_negation_flag=False) for t in texts]
+        batch = self._enc(tokens)
         batch = {k: v.to(DEVICE, non_blocking=True) for k, v in batch.items()}
 
         with torch.no_grad():
             if self.use_half:
-                with torch.autocast(device_type="cuda", dtype=torch.float16):
+                with torch.autocast(device_type=DEVICE.type, dtype=torch.float16):
                     logits = self.model(**batch).logits
             else:
                 logits = self.model(**batch).logits
@@ -58,15 +48,15 @@ class Predictor:
             labels = [self.labels[i] for i in pred_ids]
 
             if not return_probs:
-                return expanded, labels, None
+                return exps, labels, None
 
             probs = torch.softmax(logits, dim=-1).cpu().numpy()
-
+        
         probs_list: List[Dict[str, float]] = []
         for row in probs:
-            probs_list.append({self.labels[i]: float(round(float(row[i]), 4))
-                               for i in range(len(self.labels))})
-
-        return expanded, labels, probs_list
-
-predictor = Predictor()
+            probs_list.append({
+                self.labels[i]: float(round(float(row[i]), 4))
+                for i in range(len(self.labels))
+            })
+            
+        return exps, labels, probs_list
