@@ -1,10 +1,4 @@
-"""
-Script tối giản để:
-- đọc file /data/vlsp2016_test1.txt (cột text,sentiment),
-- fine-tune nhanh XLM-R (ít epoch),
-- save_pretrained vào models/xlmr/.
-Khuyến nghị train trên Colab rồi copy artifacts về repo.
-"""
+
 import os, re, numpy as np, pandas as pd, torch, torch.nn as nn
 from sklearn.model_selection import train_test_split
 from sklearn.utils.class_weight import compute_class_weight
@@ -14,7 +8,7 @@ from transformers import (AutoTokenizer, AutoModelForSequenceClassification,
 from torch.utils.data import DataLoader
 
 DATA_PATH = "data/vlsp2016_test1.txt"
-OUT_DIR = "models/xlmr"
+OUT_DIR = "models/transformers"
 CKPT = "xlm-roberta-base"
 MAX_LEN = 160
 EPOCHS = 3

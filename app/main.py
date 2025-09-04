@@ -29,4 +29,8 @@ app.include_router(predict_router)
 # Trang chủ demo
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request):
+    return templates.TemplateResponse("home.html", {"request": request, "app_name": settings.app_name})
+
+@app.get("/index", response_class=HTMLResponse)
+def index_page(request: Request):
     return templates.TemplateResponse("index.html", {"request": request, "app_name": settings.app_name})
