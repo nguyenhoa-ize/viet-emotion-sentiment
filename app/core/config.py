@@ -8,8 +8,6 @@ class Settings(BaseSettings):
     app_name: str = "Viet Emotion Sentiment API"
 
     # Model
-    model_dir: str = "models/xlmr"
-    max_len: int = 160
     use_half: bool = True
 
     # CORS
@@ -24,7 +22,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
-        protected_namespaces=("settings_",),  # tránh cảnh báo 'model_' namespace
+        protected_namespaces=()
     )
 
     # Cho phép viết CSV trong .env như: ALLOW_ORIGINS=http://localhost:3000,http://127.0.0.1:5500
