@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('sentimentForm');
   const modelSelect = document.getElementById('model');
   const textArea = document.getElementById('text');
-  const analyzeButton = document.querySelector('.btn-primary');
+  const getAnalyzeButton = () => document.querySelector('#sentimentForm button[type="submit"], #sentimentForm .btn.btn-primary');
   const singleResults = document.getElementById('single-results');
   const batchResults = document.getElementById('batch-results');
   const fileResults = document.getElementById('file-results');
@@ -212,24 +212,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     e.preventDefault();
     const text = (textArea?.value || '').trim(); if (!text) return alert('Vui lòng nhập văn bản!');
     const model = modelSelect.value;
-    analyzeButton.disabled = true; analyzeButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang phân tích...';
+    const analyzeButton = getAnalyzeButton();
+    if (analyzeButton && analyzeButton.disabled) return; // prevent double submit
+    if (analyzeButton) {
+      analyzeButton.disabled = true;
+      analyzeButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Đang phân tích...';
+    }
     try {
-      visible(singleResults, true);
+      // Prepare result areas
       visible(document.getElementById('single-summary'), false);
       visible(document.getElementById('single-detail'), false);
       const showAll = document.getElementById('highest-confidence')?.checked === true;
       if (model === 'all'){
+        // Use batchResults as the target container for rendering ALL models
+        visible(singleResults, false);
+        visible(batchResults, true);
         const all = await Promise.all(MODELS.map(async m => {
           try { const r = await postJson(`/api/predict?model_name=${m}`, { text, return_probs: true }); return { model: m.toUpperCase(), ...r }; }
           catch(err){ return { model: m.toUpperCase(), error: String(err.message||err) }; }
         }));
-        renderAllModelsSingle(all, singleResults, showAll);
+        renderAllModelsSingle(all, batchResults, showAll);
       } else {
+        // Hide ALL-models container when focusing on a single model
+        visible(batchResults, false);
+        visible(singleResults, true);
         const r = await postJson(`/api/predict?model_name=${model}`, { text, return_probs: true });
         if (showAll) fillSingleDetail(r); else fillSingleSummary(r, model);
       }
     } catch(err){ console.error(err); alert('Có lỗi xảy ra khi phân tích.'); }
-    finally { analyzeButton.disabled = false; analyzeButton.innerHTML = 'Phân tích'; }
+    finally {
+      const btn = getAnalyzeButton();
+      if (btn) { btn.disabled = false; btn.innerHTML = 'Phân tích'; }
+    }
   });
 
   // Analyze: many texts
