@@ -12,6 +12,7 @@ Lưu ý: Notebook/script huấn luyện nằm trong thư mục `train_models/`.
 
 ## Mục lục
 - Giới thiệu nhanh
+- Nguồn dữ liệu & Tài nguyên
 - Tính năng nổi bật
 - Kiến trúc & Thư mục
 - Cài đặt nhanh (Local & Docker)
@@ -25,6 +26,29 @@ Lưu ý: Notebook/script huấn luyện nằm trong thư mục `train_models/`.
 - Ngôn ngữ: Tiếng Việt, tập trung social/e-commerce comments.
 - Mô hình: `transformers`, `lstm`, `gru` (cache tại `models/`).
 - Tiền xử lý: chuẩn hóa Unicode, teencode, emoji, tokenize PyVi, nối phủ định, loại stopwords (tùy chọn).
+
+## Nguồn dữ liệu & Tài nguyên
+### Dữ liệu huấn luyện
+- **Dataset chính**: [Vietnamese Sentiment Analysis Dataset](https://www.kaggle.com/datasets/linhlpv/vietnamese-sentimentanalyst/data)
+  - Nguồn: Kaggle dataset với dữ liệu tiếng Việt được gán nhãn cảm xúc
+  - Sử dụng để huấn luyện các mô hình LSTM, GRU và Transformers
+
+### Tài nguyên hỗ trợ
+- **Teencode mapping**: [Vietnamese Teencode Dictionary](https://gist.github.com/behitek/7d9441c10b3c2739499fc5a4d9ea06fb)
+  - File: `app/utils/teencode.txt`
+  - Mục đích: Chuẩn hóa teencode tiếng Việt trong quá trình tiền xử lý văn bản
+
+- **Stopwords**: [Vietnamese Stopwords](https://www.kaggle.com/datasets/linhlpv/vietnamese-stopwords)
+  - File: `app/utils/vietnamese-stopwords.txt`
+  - Mục đích: Loại bỏ các từ dừng không có ý nghĩa trong phân tích cảm xúc
+
+### Pipeline tiền xử lý
+Các tài nguyên trên được tích hợp vào pipeline tiền xử lý trong `app/utils/text.py`:
+1. Chuẩn hóa Unicode và emoji
+2. Áp dụng teencode mapping
+3. Loại bỏ stopwords (tùy chọn)
+4. Tokenization với PyVi
+5. Xử lý phủ định
 
 ## Tính năng nổi bật
 - Endpoint rõ ràng: `GET /api/health`, `GET /api/models`, `POST /api/predict`, `POST /api/predict_batch`, `POST /api/predict_file`.
@@ -110,7 +134,7 @@ Image sẽ tự gọi `startup_models.py` để bảo đảm model sẵn sàng.
   - Tự động suy luận văn bản từ file và dự đoán hàng loạt.
 
 ## Sử dụng API (cURL ví dụ)
-Sức khỏe dịch vụ:
+Kiểm tra trạng thái dịch vụ:
 ```
 curl http://localhost:7860/api/health
 ```
